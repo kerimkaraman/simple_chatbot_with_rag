@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Chatbot Test Paneli</title>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container {
+            width: 800px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #333;
+            background-color: #252526;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            padding: 15px;
+            background-color: #333;
+            border-bottom: 1px solid #444;
+            text-align: center;
+            font-weight: bold;
+            color: #61dafb;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 10px;
+            line-height: 1.4;
+        }
+
+        .user {
+            align-self: flex-end;
+            background-color: #007acc;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .bot {
+            align-self: flex-start;
+            background-color: #3e3e42;
+            border-bottom-left-radius: 2px;
+        }
+
+        .input-area {
+            padding: 20px;
+            background-color: #333;
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #1e1e1e;
+            color: white;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #007acc;
+        }
+
+        button {
+            padding: 10px 25px;
+            background-color: #007acc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #0062a3;
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .typing {
+            font-style: italic;
+            color: #888;
+            font-size: 0.9em;
+            margin-left: 10px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-container">
+        <div class="header">🚀 RAG Chatbot Test Ortamı</div>
+        <div class="messages" id="messageBox">
+            <div class="message bot">Selam! Ben senin kodladığın yapay zekayım. Nasıl yardımcı olabilirim?</div>
+        </div>
+        <div class="typing" id="typingIndicator">Yapay zeka düşünüyor...</div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Mesajınızı yazın..." onkeypress="handleEnter(event)">
+            <button onclick="sendMessage()" id="sendBtn">Gönder</button>
+        </div>
+    </div>
+
+    <script>
+        const conversationId = "session_" + Math.random().toString(36).substr(2, 9);
+        console.log("Oturum ID:", conversationId);
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function uuidv4() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        async function sendMessage() {
+            const inputField = document.getElementById("userInput");
+            const sendBtn = document.getElementById("sendBtn");
+            const messageBox = document.getElementById("messageBox");
+            const typingIndicator = document.getElementById("typingIndicator");
+
+            const text = inputField.value.trim();
+            if (!text) return;
+            appendMessage(text, "user");
+            inputField.value = "";
+            inputField.disabled = true;
+            sendBtn.disabled = true;
+            typingIndicator.style.display = "block";
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/LLM/LLMRequest", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id: uuidv4(),
+                        conversation_id: conversationId,
+                        request_message: text
+                    })
+                });
+
+                if (!response.ok) throw new Error("Sunucu Hatası: " + response.status);
+
+                const data = await response.json();
+                appendMessage(data.response_message, "bot");
+
+            } catch (error) {
+                appendMessage("HATA: " + error.message, "bot");
+                console.error(error);
+            } finally {
+                inputField.disabled = false;
+                sendBtn.disabled = false;
+                typingIndicator.style.display = "none";
+                inputField.focus();
+            }
+        }
+
+        function appendMessage(text, sender) {
+            const messageBox = document.getElementById("messageBox");
+            const div = document.createElement("div");
+            div.className = `message ${sender}`;
+            div.textContent = text;
+            messageBox.appendChild(div);
+            messageBox.scrollTop = messageBox.scrollHeight;
+        }
+    </script>
+
+</body>
+
+</html>
