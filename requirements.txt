@@ -1,4 +1,10 @@
-pydantic
+fastapi                    
+uvicorn[standard]           
+pydantic                 
+pydantic-settings           
+google-generativeai
 google-genai
-fastapi
-python-dotenv
+motor
+pymilvus
+python-dotenv               
+langchain-text-splitters
