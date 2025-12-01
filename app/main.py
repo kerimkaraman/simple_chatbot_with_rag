@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.db.mongo import mongo_client
 from app.api.routes import llmrequest
+from app.api.routes import chatbot
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(llmrequest.router)
+app.include_router(chatbot.router, prefix="/api", tags=["Chatbot Management"])
 
 @app.get("/")
 async def root():
