@@ -8,7 +8,6 @@ class Chatbot(BaseModel):
     model_name: str = "gemini-2.0-flash"
     temperature: float = 0.7
     system_instructions: str | None = None
-    knowledge_base_collection: str | None = None
     created_at: datetime = Field(default_factory=datetime.now)
 
     class Config:
