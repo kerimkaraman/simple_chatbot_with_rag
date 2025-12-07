@@ -4,37 +4,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAG Chatbot Test Paneli</title>
+    <title>AI Chatbot Platform</title>
     <style>
-        body {
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
+        :root {
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --primary: #007acc;
+            --text-main: #e0e0e0;
+            --text-sec: #a0a0a0;
         }
 
-        .chat-container {
-            width: 800px;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #333;
-            background-color: #252526;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- DASHBOARD STYLES --- */
+        #dashboard-view {
+            padding: 40px;
+            height: 100%;
+            overflow-y: auto;
         }
 
         .header {
-            padding: 15px;
-            background-color: #333;
-            border-bottom: 1px solid #444;
-            text-align: center;
-            font-weight: bold;
-            color: #61dafb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
         }
 
-        .messages {
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .card h3 {
+            margin: 0 0 10px 0;
+            color: var(--primary);
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--text-sec);
+            font-size: 0.9em;
+        }
+
+        .add-card {
+            border: 2px dashed #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #666;
+        }
+
+        .add-card:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .add-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        /* --- CHAT STYLES --- */
+        #chat-view {
+            display: none;
+            /* Başlangıçta gizli */
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background-color: #252526;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-sec);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            color: white;
+        }
+
+        .messages-area {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
@@ -45,27 +127,26 @@
 
         .message {
             max-width: 70%;
-            padding: 10px 15px;
+            padding: 12px 16px;
             border-radius: 10px;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         .user {
             align-self: flex-end;
-            background-color: #007acc;
+            background-color: var(--primary);
             color: white;
-            border-bottom-right-radius: 2px;
         }
 
         .bot {
             align-self: flex-start;
-            background-color: #3e3e42;
-            border-bottom-left-radius: 2px;
+            background-color: #333;
+            color: #ddd;
         }
 
         .input-area {
             padding: 20px;
-            background-color: #333;
+            background-color: #1e1e1e;
             display: flex;
             gap: 10px;
         }
@@ -73,126 +154,239 @@
         input {
             flex: 1;
             padding: 12px;
-            border-radius: 5px;
-            border: 1px solid #555;
-            background-color: #1e1e1e;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #2d2d2d;
             color: white;
             outline: none;
         }
 
-        input:focus {
-            border-color: #007acc;
-        }
-
-        button {
-            padding: 10px 25px;
-            background-color: #007acc;
+        .send-btn {
+            padding: 0 25px;
+            background-color: var(--primary);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
         }
 
-        button:hover {
-            background-color: #0062a3;
-        }
-
-        button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
-
-        .typing {
-            font-style: italic;
-            color: #888;
-            font-size: 0.9em;
-            margin-left: 10px;
+        /* --- MODAL --- */
+        #modal {
             display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 10px;
+            width: 400px;
+        }
+
+        .modal-content input,
+        .modal-content textarea {
+            width: 100%;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="chat-container">
-        <div class="header">🚀 RAG Chatbot Test Ortamı</div>
-        <div class="messages" id="messageBox">
-            <div class="message bot">Selam! Ben senin kodladığın yapay zekayım. Nasıl yardımcı olabilirim?</div>
+    <!-- DASHBOARD EKRANI -->
+    <div id="dashboard-view">
+        <div class="header">
+            <h1>🤖 Chatbotlarım</h1>
+            <p style="color: #666;">Aktif Botlar</p>
         </div>
-        <div class="typing" id="typingIndicator">Yapay zeka düşünüyor...</div>
+        <div class="grid" id="botGrid">
+            <!-- Botlar Buraya Gelecek -->
+            <div class="card add-card" onclick="openModal()">
+                <div class="add-icon">+</div>
+                <div>Yeni Bot Oluştur</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAT EKRANI -->
+    <div id="chat-view">
+        <div class="chat-header">
+            <button class="back-btn" onclick="goHome()">←</button>
+            <h3 id="chatTitle">Bot Adı</h3>
+        </div>
+        <div class="messages-area" id="messagesBox">
+            <!-- Mesajlar Buraya -->
+        </div>
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="Mesajınızı yazın..." onkeypress="handleEnter(event)">
-            <button onclick="sendMessage()" id="sendBtn">Gönder</button>
+            <input type="text" id="userInput" placeholder="Mesaj yaz..." onkeypress="handleEnter(event)">
+            <button class="send-btn" onclick="sendMessage()">Gönder</button>
+        </div>
+    </div>
+
+    <!-- YENİ BOT MODALI -->
+    <div id="modal">
+        <div class="modal-content">
+            <h2>Yeni Chatbot Oluştur</h2>
+            <input type="text" id="newBotName" placeholder="Bot Adı (Örn: Hukuk Asistanı)">
+            <textarea id="newBotSystem" placeholder="System Prompt (Örn: Sen bir avukatsın...)" rows="4"></textarea>
+            <div class="modal-actions">
+                <button onclick="closeModal()"
+                    style="background:none; border:1px solid #555; color:white; padding:8px 15px; border-radius:5px; cursor:pointer;">İptal</button>
+                <button onclick="createBot()"
+                    style="background:var(--primary); border:none; color:white; padding:8px 15px; border-radius:5px; cursor:pointer;">Oluştur</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const conversationId = "session_" + Math.random().toString(36).substr(2, 9);
-        console.log("Oturum ID:", conversationId);
+        // GLOBAL DEĞİŞKENLER
+        let currentBotId = null;
+        let currentConversationId = null;
 
-        function handleEnter(e) {
-            if (e.key === 'Enter') sendMessage();
+        // --- BAŞLANGIÇ ---
+        window.onload = loadChatbots;
+
+        // 1. CHATBOTLARI ÇEK VE LİSTELE
+        async function loadChatbots() {
+            try {
+                const res = await fetch('http://127.0.0.1:8000/api/chatbots');
+                const bots = await res.json();
+
+                const grid = document.getElementById('botGrid');
+                // "Yeni Ekle" butonu hariç diğerlerini temizle
+                grid.innerHTML = `
+                <div class="card add-card" onclick="openModal()">
+                    <div class="add-icon">+</div>
+                    <div>Yeni Bot Oluştur</div>
+                </div>
+            `;
+
+                bots.forEach(bot => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.onclick = () => openChat(bot.id, bot.name);
+                    card.innerHTML = `
+                    <h3>${bot.name}</h3>
+                    <p>${bot.system_instructions ? bot.system_instructions.substring(0, 40) + '...' : 'Standart Asistan'}</p>
+                    <p style="margin-top:10px; font-size:0.8em; color:#666;">${new Date(bot.created_at).toLocaleDateString()}</p>
+                `;
+                    grid.appendChild(card);
+                });
+            } catch (e) {
+                console.error("Botlar yüklenemedi:", e);
+            }
         }
 
-        function uuidv4() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
+        // 2. YENİ BOT OLUŞTUR
+        async function createBot() {
+            const name = document.getElementById('newBotName').value;
+            const system = document.getElementById('newBotSystem').value;
 
-        async function sendMessage() {
-            const inputField = document.getElementById("userInput");
-            const sendBtn = document.getElementById("sendBtn");
-            const messageBox = document.getElementById("messageBox");
-            const typingIndicator = document.getElementById("typingIndicator");
-
-            const text = inputField.value.trim();
-            if (!text) return;
-            appendMessage(text, "user");
-            inputField.value = "";
-            inputField.disabled = true;
-            sendBtn.disabled = true;
-            typingIndicator.style.display = "block";
+            if (!name) return alert("İsim zorunlu!");
 
             try {
-                const response = await fetch("http://127.0.0.1:8000/LLM/LLMRequest", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+                const res = await fetch('http://127.0.0.1:8000/api/chatbots', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        id: uuidv4(),
-                        conversation_id: conversationId,
+                        name: name,
+                        system_instructions: system,
+                        model_name: "gemini-2.0-flash",
+                        temperature: 0.7
+                    })
+                });
+
+                if (res.ok) {
+                    closeModal();
+                    loadChatbots(); // Listeyi yenile
+                } else {
+                    alert("Hata oluştu!");
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // 3. SOHBETE GİR
+        function openChat(botId, botName) {
+            currentBotId = botId;
+            // Her girişte yeni bir session id üretelim (Şimdilik)
+            currentConversationId = "session_" + Math.random().toString(36).substr(2, 9);
+
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('chat-view').style.display = 'flex';
+            document.getElementById('chatTitle').innerText = botName;
+            document.getElementById('messagesBox').innerHTML = '<div class="message bot">Sohbet başladı! Nasıl yardımcı olabilirim?</div>';
+        }
+
+        // 4. GERİ DÖN
+        function goHome() {
+            document.getElementById('chat-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
+            currentBotId = null;
+            loadChatbots();
+        }
+
+        // 5. MESAJ GÖNDER
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            // Ekrana bas
+            appendMessage(text, 'user');
+            input.value = '';
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/LLM/LLMRequest", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        id: crypto.randomUUID(),
+                        conversation_id: currentConversationId,
+                        chatbot_id: currentBotId, // <-- ARTIK BOT ID DE GÖNDERİYORUZ
                         request_message: text
                     })
                 });
 
-                if (!response.ok) throw new Error("Sunucu Hatası: " + response.status);
+                const data = await res.json();
+                appendMessage(data.response_message, 'bot');
 
-                const data = await response.json();
-                appendMessage(data.response_message, "bot");
-
-            } catch (error) {
-                appendMessage("HATA: " + error.message, "bot");
-                console.error(error);
-            } finally {
-                inputField.disabled = false;
-                sendBtn.disabled = false;
-                typingIndicator.style.display = "none";
-                inputField.focus();
+            } catch (e) {
+                appendMessage("Hata: " + e.message, 'bot');
             }
         }
 
+        // YARDIMCILAR
         function appendMessage(text, sender) {
-            const messageBox = document.getElementById("messageBox");
-            const div = document.createElement("div");
+            const box = document.getElementById('messagesBox');
+            const div = document.createElement('div');
             div.className = `message ${sender}`;
-            div.textContent = text;
-            messageBox.appendChild(div);
-            messageBox.scrollTop = messageBox.scrollHeight;
+            div.innerText = text;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
+
+        function handleEnter(e) { if (e.key === 'Enter') sendMessage(); }
+
+        // MODAL İŞLEMLERİ
+        function openModal() { document.getElementById('modal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
     </script>
 
 </body>

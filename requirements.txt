@@ -8,3 +8,4 @@ motor
 pymilvus
 python-dotenv               
 langchain-text-splitters
+pymongo

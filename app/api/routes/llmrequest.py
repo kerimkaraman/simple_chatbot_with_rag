@@ -7,5 +7,4 @@ router = APIRouter()
 
 @router.post("/LLM/LLMRequest")
 async def create_llm_request(request: LLMRequest) -> LLMResponse:
-    result = await process_llm_request(request)
-    return result
+    return await process_llm_request(request)
