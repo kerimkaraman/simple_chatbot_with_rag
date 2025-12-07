@@ -67,5 +67,13 @@ class MongoService:
             doc["id"] = doc["_id"]
             chatbots.append(doc)
         return chatbots
+    
+    async def get_single_chatbot(self, chatbot_id: str) -> Chatbot:
+        db = get_db()
+
+        cursor = await db[MONGO_CHATBOTS_COLLECTION].find_one({"_id": chatbot_id})
+        if cursor:
+            return Chatbot(**cursor)
+        return None
 
 mongo_service = MongoService()
