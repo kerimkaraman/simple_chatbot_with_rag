@@ -6,7 +6,6 @@ from app.models.response import LLMResponse
 from app.core.prompts import create_rag_prompt
 from app.services.db_services import mongo_service
 from app.models.chatbot import Chatbot
-
 import os
 
 load_dotenv()
