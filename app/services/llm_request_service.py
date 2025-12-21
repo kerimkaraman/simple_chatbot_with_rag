@@ -5,14 +5,14 @@ from app.models.request import LLMRequest
 from app.models.response import LLMResponse
 from app.core.prompts import create_rag_prompt
 from app.services.db_services import mongo_service
-from app.models.chatbot import Chatbot
+from app.services.milvus_service import search_knowledge_base_item
 import os
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI-API-KEY"))
 
-def prepare_prompt_for_llm_request(question: str, context: str, history: str):
-    context = create_rag_prompt(question=question, context=context, history=history)
+def prepare_prompt_for_llm_request(question: str, context: str, history: str, CHATBOT_PROMPT: str):
+    context = create_rag_prompt(question=question, context=context, history=history, CHATBOT_PROMPT=CHATBOT_PROMPT)
     return context
 
 
@@ -32,6 +32,8 @@ async def process_llm_request(request: LLMRequest) -> LLMResponse:
         )
 
 
+        rag_context = await search_knowledge_base_item(chatbot_id=chatbot_id, search_query=request.request_message)
+
         if chatbot_id != "default_bot":
             chatbot_settings = await mongo_service.get_single_chatbot(chatbot_id)
             if chatbot_settings:
@@ -41,7 +43,7 @@ async def process_llm_request(request: LLMRequest) -> LLMResponse:
 
         ai_response = client.models.generate_content(
             model = model_name,
-            contents=prepare_prompt_for_llm_request(question=request.request_message, context="", history=""),
+            contents=prepare_prompt_for_llm_request(question=request.request_message, context=rag_context, history="", CHATBOT_PROMPT=system_instructions),
         )
 
         await mongo_service.create_message(
