@@ -105,7 +105,7 @@ async def search_knowledge_base_item(chatbot_id: str, search_query: str):
     collection_name = create_chatbot_collection(chatbot_id)
 
     if not milvus_client.has_collection(collection_name):
-        print(f"ℹ️ Collection bulunamadı veya boş: {collection_name}")
+        print(f"Collection bulunamadı veya boş: {collection_name}")
         return ""
     
     try:
@@ -140,6 +140,3 @@ async def search_knowledge_base_item(chatbot_id: str, search_query: str):
     except Exception as e:
         print(e)
         return ""
-
-
-    

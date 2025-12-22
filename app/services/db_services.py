@@ -75,5 +75,22 @@ class MongoService:
         if cursor:
             return Chatbot(**cursor)
         return None
+    
+
+    async def get_chat_history(self, conversation_id: str, limit: int = 6): # limiti son 6 mesaj olarak tuttuk şimdilik
+        db = get_db()
+
+        cursor = db[MONGO_MESSAGES_COLLECTION].find(
+            {"conversation_id": conversation_id}
+        ).sort("created_at", -1).limit(limit)
+
+        history_list = []
+        async for doc in cursor:
+            role = doc.get("role", "unknown")
+            content = doc.get("content", "")
+            history_list.append(f"{role}: {content}")
+
+        history_list.reverse()
+        return "\n".join(history_list)
 
 mongo_service = MongoService()
