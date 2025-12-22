@@ -31,8 +31,9 @@ async def process_llm_request(request: LLMRequest) -> LLMResponse:
             content=request.request_message
         )
 
-
         rag_context = await search_knowledge_base_item(chatbot_id=chatbot_id, search_query=request.request_message)
+
+        chat_history = await mongo_service.get_chat_history(conversation_id=request.conversation_id)
 
         if chatbot_id != "default_bot":
             chatbot_settings = await mongo_service.get_single_chatbot(chatbot_id)
@@ -43,7 +44,7 @@ async def process_llm_request(request: LLMRequest) -> LLMResponse:
 
         ai_response = client.models.generate_content(
             model = model_name,
-            contents=prepare_prompt_for_llm_request(question=request.request_message, context=rag_context, history="", CHATBOT_PROMPT=system_instructions),
+            contents=prepare_prompt_for_llm_request(question=request.request_message, context=rag_context, history=chat_history, CHATBOT_PROMPT=system_instructions),
         )
 
         await mongo_service.create_message(
