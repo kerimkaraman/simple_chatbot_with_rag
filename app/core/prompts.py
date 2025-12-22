@@ -9,23 +9,23 @@ KESİN KURALLARIN ŞUNLARDIR:
 5. Cevapların net, anlaşılır ve Türkçe olsun.
 """
 
-def create_rag_prompt(context: str, history: str, question: str) -> str:
+def create_rag_prompt(context: str, history: str, question: str, CHATBOT_PROMPT: str) -> str:
     """
     LLM'e gönderilecek nihai metni oluşturur.
     """
     full_prompt = f"""
-{SYSTEM_PROMPT}
+        {SYSTEM_PROMPT}
+        {CHATBOT_PROMPT}
+        ---
+        SOHBET GEÇMİŞİ (Önceki Konuşmalar):
+        {history}
+        ---
 
----
-SOHBET GEÇMİŞİ (Önceki Konuşmalar):
-{history}
----
+        BAĞLAM (Milvus'tan Gelen Bilgi):
+        {context}
 
-BAĞLAM (Milvus'tan Gelen Bilgi):
-{context}
-
----
-KULLANICI SORUSU:
-{question}
-"""
+        ---
+        KULLANICI SORUSU:
+        {question}
+        """
     return full_prompt

@@ -99,3 +99,44 @@ async def insert_knowledge_item(chatbot_id: str, text: str, source: str = "manua
             message=f"Hata oluştu: {str(e)}",
             error=str(e)
         )
+
+async def search_knowledge_base_item(chatbot_id: str, search_query: str):
+
+    collection_name = create_chatbot_collection(chatbot_id)
+
+    if not milvus_client.has_collection(collection_name):
+        print(f"Collection bulunamadı veya boş: {collection_name}")
+        return ""
+    
+    try:
+
+        embedding_resp = client.models.embed_content(
+            model="text-embedding-004",
+            contents=search_query
+        )
+
+        query_vector = embedding_resp.embeddings[0].values
+
+        res = milvus_client.search(
+            collection_name=collection_name,
+            anns_field="vector",
+            data=[query_vector],
+            limit=3,
+            search_params={"metric_type": "COSINE", "params": {}},
+            output_fields=["text", "source"]
+        )
+
+        found_texts = []
+
+        for hit in res[0]:
+            text_content = hit["entity"].get("text")
+            source_name = hit["entity"].get("source", "Bilinmeyen")
+            score = hit["distance"]
+            found_texts.append(f"- {text_content} (Kaynak: {source_name})")
+        
+        return "\n\n".join(found_texts)
+
+
+    except Exception as e:
+        print(e)
+        return ""
